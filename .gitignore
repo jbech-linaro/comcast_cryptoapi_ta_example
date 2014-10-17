@@ -1,0 +1,7 @@
+*.o
+host/comcast_crypto_demo
+ta/out-client-aarch64
+GPATH
+GRTAGS
+GSYMS
+GTAGS
