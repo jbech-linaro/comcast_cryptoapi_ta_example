@@ -1,0 +1,3 @@
+# Changes for the comcast demo
+file /bin/comcast_crypto_demo /home/jbech/devel/optee_projects/qemu/comcast_cryptoapi_ta_example/host/comcast_crypto_demo 755 0 0
+file /lib/optee_armtz/636f6d63-6173-7420-63727970746f2074.ta /home/jbech/devel/optee_projects/qemu/out/comcast_ta/636f6d63-6173-7420-63727970746f2074.ta 444 0 0
