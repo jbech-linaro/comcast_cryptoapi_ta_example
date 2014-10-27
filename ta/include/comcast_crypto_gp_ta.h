@@ -35,5 +35,6 @@
 /* The TAFs ID implemented in this TA */
 #define TAF_SHA1 0
 #define TAF_SHA256 1
+#define TAF_CORNER_CASES 2
 
 #endif

@@ -33,6 +33,8 @@
 
 #include "comcast_crypto_gp_ta.h"
 
+#define DEBUG
+
 static void dump_hash(uint8_t *hash, size_t len)
 {
 #ifdef DEBUG
@@ -154,7 +156,7 @@ static TEE_Result call_gp_sha1_interface(uint32_t param_types,
 		goto out;
 	}
 
-	//dump_hash(digest, digest_len);
+	dump_hash(digest, digest_len);
 out:
 	if (operation)
 		TEE_FreeOperation(operation);
@@ -212,7 +214,7 @@ static TEE_Result call_gp_sha256_interface(uint32_t param_types,
 		goto out;
 	}
 
-	//dump_hash(digest, digest_len);
+	dump_hash(digest, digest_len);
 out:
 	if (operation)
 		TEE_FreeOperation(operation);
@@ -220,8 +222,8 @@ out:
 	return res;
 }
 
-static TEE_Result call_gp_sha1_digest_only(uint32_t param_types,
-					   TEE_Param params[4])
+static TEE_Result call_gp_corner_cases(uint32_t param_types,
+				       TEE_Param params[4])
 {
 	TEE_OperationHandle operation = NULL;
 	TEE_Result res = TEE_ERROR_GENERIC;
@@ -238,7 +240,10 @@ static TEE_Result call_gp_sha1_digest_only(uint32_t param_types,
 						   TEE_PARAM_TYPE_MEMREF_OUTPUT,
 						   TEE_PARAM_TYPE_NONE,
 						   TEE_PARAM_TYPE_NONE);
-	DMSG("Calling GP Internal API for doing SHA1 hashing");
+	size_t digest_ctr = 0;
+	size_t final_ctr = 0;
+
+	DMSG("Running some corner cases");
 	message = params[0].memref.buffer;
 	message_len = params[0].memref.size;
 	(void)message_len;
@@ -259,23 +264,62 @@ static TEE_Result call_gp_sha1_digest_only(uint32_t param_types,
 		goto out;
 	}
 
-	//DMSG("message to hash: %s", (char *)message);
-	TEE_DigestUpdate(operation, NULL, 0);
+	/* 01. Testing all combinations using NULL or valid message */
+	for (digest_ctr = 0; digest_ctr < 2; digest_ctr++) {
+		for (final_ctr = 0; final_ctr < 2; final_ctr++) {
+			DMSG("Looping: D: %d   F: %d", digest_ctr, final_ctr);
+			if (digest_ctr)
+				TEE_DigestUpdate(operation, message, message_len);
+			else
+				TEE_DigestUpdate(operation, NULL, 0);
 
-	if (res != TEE_SUCCESS) {
-		DMSG("TEE_DigestUpdate failed! res: 0x%x", res);
-		goto out;
+			if (res != TEE_SUCCESS)
+				DMSG("TEE_DigestUpdate failed! res: 0x%x, digest_ctr: %d, final_ctr %d", res, digest_ctr, final_ctr);
+
+			if (final_ctr)
+				res = TEE_DigestDoFinal(operation, message, message_len, digest,
+							&digest_len);
+			else
+				res = TEE_DigestDoFinal(operation, NULL, 0, digest,
+							&digest_len);
+
+			if (res != TEE_SUCCESS)
+				DMSG("TEE_DigestDoFinal failed! res: 0x%x, digest: %d, final_ctr %d", res, digest_ctr, final_ctr);
+			else
+				dump_hash(digest, digest_len);
+
+			/*
+			 * Must reset the operation between the different tests.
+			 */
+			TEE_ResetOperation(operation);
+		}
 	}
 
+	/* 02. Only calling the final function using NULL message */
 	res = TEE_DigestDoFinal(operation, NULL, 0, digest,
 				&digest_len);
 
 	if (res != TEE_SUCCESS) {
 		DMSG("TEE_DigestDoFinal failed! res: 0x%x", res);
 		goto out;
+	} else {
+		DMSG("02. Only final function, null message");
+		dump_hash(digest, digest_len);
 	}
 
-	dump_hash(digest, digest_len);
+	/* 03. Only calling the final function using abc message */
+	TEE_ResetOperation(operation);
+	res = TEE_DigestDoFinal(operation, message, message_len, digest,
+				&digest_len);
+
+	if (res != TEE_SUCCESS) {
+		DMSG("TEE_DigestDoFinal failed! res: 0x%x", res);
+		goto out;
+	} else {
+		DMSG("03. Only final function, abc message");
+		dump_hash(digest, digest_len);
+	}
+
 out:
 	if (operation)
 		TEE_FreeOperation(operation);
@@ -303,11 +347,12 @@ TEE_Result TA_InvokeCommandEntryPoint(void *sess_ctx, uint32_t cmd_id,
 	 */
 	switch (cmd_id) {
 	case TAF_SHA1:
-		return call_gp_sha1_digest_only(param_types, params);
+		return call_gp_sha1_interface(param_types, params);
 	case TAF_SHA256:
 		return call_gp_sha256_interface(param_types, params);
+	case TAF_CORNER_CASES:
+		return call_gp_corner_cases(param_types, params);
 	default:
-		(void)call_gp_sha1_interface(param_types, params);
 		return TEE_ERROR_BAD_PARAMETERS;
 	}
 }

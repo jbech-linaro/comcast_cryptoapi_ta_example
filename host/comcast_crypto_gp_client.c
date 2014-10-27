@@ -96,8 +96,7 @@ TEEC_Result comcast_ta_digest(Sec_DigestAlgorithm alg, void *buffer,
 					 TEEC_NONE,
 					 TEEC_NONE);
 
-	op.params[0].tmpref.buffer = (void *)message;
-	op.params[0].tmpref.size = strlen(message);
+	op.params[0].tmpref.buffer = (void *)message; op.params[0].tmpref.size = strlen(message);
 	
 	op.params[1].tmpref.buffer = (void *)digest;
 	op.params[1].tmpref.size = digest_len;
@@ -119,6 +118,83 @@ TEEC_Result comcast_ta_digest(Sec_DigestAlgorithm alg, void *buffer,
 		printf("Algorithm not supported\n");
 		res = TEEC_ERROR_BAD_PARAMETERS;
 	}
+
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			res, err_origin);
+
+	/* We're done with the TA, close the session ... */
+	TEEC_CloseSession(&sess);
+
+	/* ... and destroy the context. */
+	TEEC_FinalizeContext(&ctx);
+
+	return res;
+}
+
+/*
+ * Runs a couple of corner cases.
+ */
+TEEC_Result corner_cases()
+{
+	TEEC_Result res;
+	TEEC_Context ctx;
+	TEEC_Session sess;
+	TEEC_Operation op;
+
+	/*
+	 * This is what makes the call communicate with a certain Trusted
+	 * Application. In this case, the demo Comcast TA (see also
+	 * comcast_crypto_gp_ta.h, those must be the same UUID).
+	 */
+	TEEC_UUID uuid = COMCAST_CRYPTO_EXAMPLE_TA;
+	uint32_t err_origin;
+	char *message = "abc";
+
+	char digest[64];
+	uint32_t digest_len = 20;
+
+	/* Initialize a context connecting us to the TEE */
+	res = TEEC_InitializeContext(NULL, &ctx);
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_InitializeContext failed with code 0x%x", res);
+
+	printf("Opening the session to Comcast RDK TA\n");
+	/*
+	 * Open a session to the Comcast Crypto TA (this corresponds to the
+	 * function TA_OpenSessionEntryPoint() in the TA).
+	 */
+	res = TEEC_OpenSession(&ctx, &sess, &uuid,
+			       TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_Opensession failed with code 0x%x origin 0x%x",
+			res, err_origin);
+
+	memset(&op, 0, sizeof(op));
+	/*
+	 * Here we are stating that the first parameter should be a buffer and
+	 * it should be considered as an input buffer, this is where we provide
+	 * the message to be hashed. The second parameter is also a buffer,
+	 * however this is configured as an output buffer and this will be used
+	 * for storing the final digest (i.e, the resulting hash).
+	 */
+	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT,
+					 TEEC_MEMREF_TEMP_OUTPUT,
+					 TEEC_NONE,
+					 TEEC_NONE);
+
+	op.params[0].tmpref.buffer = (void *)message; op.params[0].tmpref.size = strlen(message);
+	
+	op.params[1].tmpref.buffer = (void *)digest;
+	op.params[1].tmpref.size = digest_len;
+
+	/*
+	 * Execute the hash function in the TA by invoking it using either the
+	 * TAF_SHA1 or TAF_SHA256 id (see the corresponding function
+	 * TA_InvokeCommandEntryPoint() in the TA).
+	 */
+	printf("Invoking a function in Comcast RDK TA\n");
+	res = TEEC_InvokeCommand(&sess, TAF_CORNER_CASES, &op, &err_origin);
 
 	if (res != TEEC_SUCCESS)
 		errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
@@ -197,6 +273,10 @@ int main(int argc, char *argv[])
 		errx(1, "SecDigest_Release failed with code 0x%x", res);
 
 	dump_hash((const char *)message, digest, digest_size);
+
+	res = corner_cases();
+	if (res != TEEC_SUCCESS)
+		errx(1, "corner_cases failed with code 0x%x", res);
 
 	return 0;
 }
