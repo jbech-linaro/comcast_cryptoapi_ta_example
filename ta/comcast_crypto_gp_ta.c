@@ -35,9 +35,14 @@
 
 static void dump_hash(uint8_t *hash, size_t len)
 {
+#ifdef DEBUG
 	size_t i;
 	for (i = 0; i < len; i++)
 		DMSG("%02x", hash[i]);
+#else
+	(void)hash;
+	(void)len;
+#endif
 }
 
 /*
@@ -149,7 +154,7 @@ static TEE_Result call_gp_sha1_interface(uint32_t param_types,
 		goto out;
 	}
 
-	dump_hash(digest, digest_len);
+	//dump_hash(digest, digest_len);
 out:
 	if (operation)
 		TEE_FreeOperation(operation);
@@ -207,6 +212,69 @@ static TEE_Result call_gp_sha256_interface(uint32_t param_types,
 		goto out;
 	}
 
+	//dump_hash(digest, digest_len);
+out:
+	if (operation)
+		TEE_FreeOperation(operation);
+
+	return res;
+}
+
+static TEE_Result call_gp_sha1_digest_only(uint32_t param_types,
+					   TEE_Param params[4])
+{
+	TEE_OperationHandle operation = NULL;
+	TEE_Result res = TEE_ERROR_GENERIC;
+
+	/* Temporary variable for the input (message to be hashed) */
+	void *message = NULL;
+	size_t message_len = 0;
+
+	/* Temporary variables for the digest */
+	void *digest = NULL;
+	size_t digest_len = 0;
+
+	uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
+						   TEE_PARAM_TYPE_MEMREF_OUTPUT,
+						   TEE_PARAM_TYPE_NONE,
+						   TEE_PARAM_TYPE_NONE);
+	DMSG("Calling GP Internal API for doing SHA1 hashing");
+	message = params[0].memref.buffer;
+	message_len = params[0].memref.size;
+	(void)message_len;
+
+	digest = params[1].memref.buffer;
+	digest_len = params[1].memref.size;
+
+
+	memset(digest, 0, digest_len);
+
+	if (param_types != exp_param_types || !message || !digest)
+		return TEE_ERROR_BAD_PARAMETERS;
+
+	res = TEE_AllocateOperation(&operation, TEE_ALG_SHA1, TEE_MODE_DIGEST, 0);
+
+	if (res != TEE_SUCCESS) {
+		DMSG("TEE_AllocateOperation failed! res: 0x%x", res);
+		goto out;
+	}
+
+	//DMSG("message to hash: %s", (char *)message);
+	TEE_DigestUpdate(operation, NULL, 0);
+
+	if (res != TEE_SUCCESS) {
+		DMSG("TEE_DigestUpdate failed! res: 0x%x", res);
+		goto out;
+	}
+
+	res = TEE_DigestDoFinal(operation, NULL, 0, digest,
+				&digest_len);
+
+	if (res != TEE_SUCCESS) {
+		DMSG("TEE_DigestDoFinal failed! res: 0x%x", res);
+		goto out;
+	}
+
 	dump_hash(digest, digest_len);
 out:
 	if (operation)
@@ -214,6 +282,7 @@ out:
 
 	return res;
 }
+
 /*
  * Called when a TA is invoked. sess_ctx hold that value that was
  * assigned by TA_OpenSessionEntryPoint(). The rest of the paramters
@@ -234,10 +303,11 @@ TEE_Result TA_InvokeCommandEntryPoint(void *sess_ctx, uint32_t cmd_id,
 	 */
 	switch (cmd_id) {
 	case TAF_SHA1:
-		return call_gp_sha1_interface(param_types, params);
+		return call_gp_sha1_digest_only(param_types, params);
 	case TAF_SHA256:
 		return call_gp_sha256_interface(param_types, params);
 	default:
+		(void)call_gp_sha1_interface(param_types, params);
 		return TEE_ERROR_BAD_PARAMETERS;
 	}
 }
