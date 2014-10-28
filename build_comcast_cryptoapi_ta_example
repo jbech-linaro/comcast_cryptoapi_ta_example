@@ -1,14 +1,12 @@
 #!/bin/bash
-export PATH=$HOME/devel/fvp_optee/toolchains/aarch64/bin:$PATH
-export PATH=$HOME/devel/fvp_optee/toolchains/aarch32/bin:$PATH
+export PATH=$HOME/devel/qemu_optee/toolchains/aarch64/bin:$PATH
+export PATH=$HOME/devel/qemu_optee/toolchains/aarch32/bin:$PATH
 
-export TA_DEV_KIT_DIR=$HOME/devel/fvp_optee/optee_os/out-os-fvp/export-user_ta
-export TEEC_EXPORT=$HOME/devel/fvp_optee/optee_client/out-client-aarch64/export
+export TA_DEV_KIT_DIR=$HOME/devel/qemu_optee/out-os-qemu/export-user_ta
+export TEEC_EXPORT=$HOME/devel/qemu_optee/out-client-armv7/export
 
-export DEBUG=1
-
-cd $HOME/devel/fvp_optee/comcast_cryptoapi_ta_example
-make O=./out-client-aarch64 \
-                HOST_CROSS_COMPILE=aarch64-linux-gnu- \
+cd $HOME/devel/qemu_optee/comcast_cryptoapi_ta_example
+make O=./out-client-aarch32 \
+                HOST_CROSS_COMPILE=arm-linux-gnueabihf- \
                 TA_CROSS_COMPILE=arm-linux-gnueabihf- \
                 $@
