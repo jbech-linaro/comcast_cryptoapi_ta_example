@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include <stdio.h>
+#include <string.h>
 #include <err.h>
 #include <comcast_crypto_gp_ta.h>
 #include <sec_security.h>
