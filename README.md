@@ -55,6 +55,7 @@ In this git (comcast_cryptoapi_ta_example.git), there is the script [build_comca
 
 Next step is to get the newly built Trusted Application into the filesystem that is used when booting FVP. To do this you need to edit the file ```gen_rootfs/filelist-tee.txt``adding lines telling where to find and where to store the test binary and the Trusted Application, like this:
 
+For FVP
 ```
 # TA's
 ....
@@ -65,6 +66,18 @@ file /lib/teetz/636f6d63-6173-7420-63727970746f2074.ta /home/johndoe/devel/fvp_o
 file /bin/comcast_crypto_demo /home/johndoe/devel/fvp_optee/comcast_cryptoapi_ta_example/host/comcast_crypto_demo 755 0 0 
 ```
 
+For QEMU
+```
+# TAs                                                                                                                                                                                                                                         
+dir /lib/optee_armtz 755 0 0                                                                                                                                                                                                                  
+...
+file /lib/optee_armtz/636f6d63-6173-7420-63727970746f2074.ta /home/johndoe/devel/qemu_optee/out/comcast_ta/636f6d63-6173-7420-63727970746f2074.ta 444 0 0
+
+# OP-TEE Tests
+...
+file /bin/comcast_crypto_demo /home/johndoe/devel/qemu_optee/comcast_cryptoapi_ta_example/host/comcast_crypto_demo 755 0 0
+```
+
 When that has been done and the files has been saved, you need to regenerate the filesystem. That could be done by running the script ```update_rootfs.sh```. For you who wonder about the strange name of the Trusted Application, we can mention that this is coming from the UUID for the particular Trusted Application.
 
 #### Running
@@ -72,7 +85,7 @@ When that has been done and the files has been saved, you need to regenerate the
 2. Load the kernel module for OP-TEE and launch tee-supplicant, by typing:
 
    ```
-   $ modprobe optee
+   $ modprobe optee_armtz
    $ tee-supplicant &
    ```
 3. Launch the test (and thereby the TA), by typing:
