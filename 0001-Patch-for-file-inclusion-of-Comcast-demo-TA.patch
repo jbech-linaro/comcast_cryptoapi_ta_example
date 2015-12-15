@@ -1,0 +1,44 @@
+From f182f429b6801b05b00fe977ac22a01b82fdd27c Mon Sep 17 00:00:00 2001
+From: Joakim Bech <joakim.bech@linaro.org>
+Date: Tue, 15 Dec 2015 10:05:03 +0100
+Subject: [PATCH] Patch for file inclusion of Comcast demo TA
+
+Signed-off-by: Joakim Bech <joakim.bech@linaro.org>
+---
+ fvp.mk  | 4 +++-
+ qemu.mk | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/fvp.mk b/fvp.mk
+index 1d40793..8897384 100644
+--- a/fvp.mk
++++ b/fvp.mk
+@@ -172,7 +172,9 @@ filelist-tee:
+ 	@echo "slink /lib/aarch64-linux-gnu/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+ 
+ update_rootfs: busybox optee-client optee-linuxdriver xtest filelist-tee
+-	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
++	cat $(GEN_ROOTFS_PATH)/filelist-final.txt \
++		$(GEN_ROOTFS_PATH)/filelist-tee.txt \
++		$(ROOT)/comcast_cryptoapi_ta_example/filelist-comcast_demo_fvp_fs.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
+ 	cd $(GEN_ROOTFS_PATH); \
+ 	        $(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
+ 
+diff --git a/qemu.mk b/qemu.mk
+index 5bdc0c2..43140fe 100644
+--- a/qemu.mk
++++ b/qemu.mk
+@@ -167,7 +167,9 @@ filelist-tee: xtest
+ 	@echo "slink /lib/arm-linux-gnueabihf/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+ 
+ update_rootfs: busybox optee-client optee-linuxdriver filelist-tee
+-	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
++	cat $(GEN_ROOTFS_PATH)/filelist-final.txt \
++		$(GEN_ROOTFS_PATH)/filelist-tee.txt \
++		$(ROOT)/comcast_cryptoapi_ta_example/filelist-comcast_demo_qemu_fs.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
+ 	cd $(GEN_ROOTFS_PATH); \
+ 		$(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
+ 
+-- 
+1.9.1
+
