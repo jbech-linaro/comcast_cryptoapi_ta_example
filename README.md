@@ -22,8 +22,8 @@ calling the following functions.
 
 ```
 Sec_Result SecDigest_GetInstance(Sec_ProcessorHandle* secProcHandle,
-        Sec_DigestAlgorithm algorithm, Sec_DigestHandle** digestHandle) 
-        
+        Sec_DigestAlgorithm algorithm, Sec_DigestHandle** digestHandle)
+
 Sec_Result SecDigest_Update(Sec_DigestHandle* digestHandle,
         SEC_BYTE* input,SEC_SIZE inputSize)
 
@@ -56,7 +56,7 @@ Conceptually the architecture and interaction between the components looks like
 in the image below. As you can see in the image, it tells where functionality is
 running, secure vs normal world and also in which component. To get a quick
 overview of where functionality has been implemented, we have also added the
-names of the files for the different software components. 
+names of the files for the different software components.
 
 ![Architectural overview](doc/architectural_overview.png)
 
@@ -111,11 +111,11 @@ The format for TA's and binaries are as below:
 ```
 # TA's
 ....
-file /lib/teetz/636f6d63-6173-7420-63727970746f2074.ta /home/johndoe/devel/optee/comcast_cryptoapi_ta_example/ta/out-client-aarch64/636f6d63-6173-7420-63727970746f2074.ta 444 0 0
+file /lib/optee_armtz/636f6d63-6173-7420-63727970746f2074.ta /home/johndoe/devel/optee/comcast_cryptoapi_ta_example/ta/out-client-aarch64/636f6d63-6173-7420-63727970746f2074.ta 444 0 0
 
 # OP-TEE Tests
 ...
-file /bin/comcast_crypto_demo /home/johndoe/devel/optee/comcast_cryptoapi_ta_example/host/comcast_crypto_demo 755 0 0 
+file /bin/comcast_crypto_demo /home/johndoe/devel/optee/comcast_cryptoapi_ta_example/host/comcast_crypto_demo 755 0 0
 ```
 
 #### Running
