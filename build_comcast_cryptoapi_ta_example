@@ -29,7 +29,7 @@ case $TARGET in
 		exit
 esac
 
-export TA_DEV_KIT_DIR=$OPTEE_ROOT/optee_os/out/arm-plat-$PLATFORM/export-ta_$TA_ARCH
+export TA_DEV_KIT_DIR=$OPTEE_ROOT/optee_os/out/arm/export-ta_$TA_ARCH
 export TEEC_EXPORT=$OPTEE_ROOT/optee_client/out/export
 
 cd $OPTEE_ROOT/comcast_cryptoapi_ta_example
