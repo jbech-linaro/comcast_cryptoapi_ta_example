@@ -1,6 +1,13 @@
-Demo TA using OP-TEE and Comcast Crypto API
+DEPRECATED - Demo TA using OP-TEE and Comcast Crypto API
 ---
 
+#2016-12-21: TA not maintained and deprecated
+Instead of using this demo TA, please have a look at the [hello_world TA]
+(https://github.com/linaro-swg/hello_world) which is both maintained and
+included in the full repo setup maintained by Linaro.
+
+Intro
+---
 This little demo Trusted Application serves the purpose of showing how you could
 open up functionality from a TEE or just simply how to interact with a TEE using
 GlobalPlatform interfaces. In this case we have been using OP-TEE as the TEE,
